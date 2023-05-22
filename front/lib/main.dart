@@ -25,6 +25,21 @@ class CardItem {
     required this.duration,
     required this.status,
   });
+
+  @override
+  String toString() {
+    return '''
+      {
+        "id": $id,
+        "title": "$title",
+        "description": "$description",
+        "date": "$date",
+        "priority": "$priority",
+        "duration": $duration,
+        "status": "$status"
+      }
+    ''';
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -85,15 +100,66 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future<void> updateCardData(int id, CardItem data) async {
+    try {
+      var url = Uri.http('localhost:3030', 'api/card/$id');
+      var headers = {'Content-Type': 'application/json'};
+      var response =
+          await http.put(url, headers: headers, body: data.toString());
+
+      if (response.statusCode == 200) {
+        print('Card updated');
+      } else {
+        // Handle error response
+        print('Request failed with status: ${response.statusCode}.');
+      }
+    } catch (error) {
+      // Handle network or JSON parsing errors
+      print('Error: $error');
+    }
+  }
+
+  Future<void> createCard(data) async {
+    try {
+      var url = Uri.http('localhost:3030', 'api/card');
+      var response = await http.post(url, body: data);
+      if (response.statusCode == 200) {
+        print('Card created');
+      } else {
+        // Handle error response
+        print('Request failed with status: ${response.statusCode}.');
+      }
+    } catch (error) {
+      // Handle network or JSON parsing errors
+      print('Error: $error');
+    }
+  }
+
+  Future<void> deleteCard(id) async {
+    try {
+      var url = Uri.http('localhost:3030', 'api/card/$id');
+      var response = await http.delete(url);
+      if (response.statusCode == 200) {
+        print('Card deleted');
+      } else {
+        // Handle error response
+        print('Request failed with status: ${response.statusCode}.');
+      }
+    } catch (error) {
+      // Handle network or JSON parsing errors
+      print('Error: $error');
+    }
+  }
+
   Widget buildColumn(String columnTitle, List<CardItem> columnCards) {
     return TableCell(
       child: Column(
         children: [
           Text(
             columnTitle,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           for (CardItem card in columnCards)
             Draggable(
               data: card,
@@ -127,6 +193,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   data.status = 'completed';
                 }
 
+                updateCardData(data.id, data);
+
                 print("columnTitle: $columnTitle, data.status: ${data.status}");
 
                 // Add the card to the new column
@@ -150,69 +218,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Trello Clone Gaspard W'),
+        title: Text('Trello Clone Gaspard W'),
       ),
       body: Table(
         children: [
           TableRow(
             children: [
-              TableCell(
-                child: Column(
-                  children: [
-                    const Text(
-                      'To-do',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-                    for (CardItem card in todoCards)
-                      Draggable(
-                        data: card,
-                        feedback: buildCardWidget(card),
-                        childWhenDragging: Container(),
-                        child: buildCardWidget(card),
-                      ),
-                  ],
-                ),
-              ),
-              TableCell(
-                child: Column(
-                  children: [
-                    const Text(
-                      'In Progress',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-                    for (CardItem card in inprogressCards)
-                      Draggable(
-                        data: card,
-                        feedback: buildCardWidget(card),
-                        childWhenDragging: Container(),
-                        child: buildCardWidget(card),
-                      ),
-                  ],
-                ),
-              ),
-              TableCell(
-                child: Column(
-                  children: [
-                    const Text(
-                      'Completed',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-                    for (CardItem card in completedCards)
-                      Draggable(
-                        data: card,
-                        feedback: buildCardWidget(card),
-                        childWhenDragging: Container(),
-                        child: buildCardWidget(card),
-                      ),
-                  ],
-                ),
-              ),
+              buildColumn('To-do', todoCards),
+              buildColumn('In Progress', inprogressCards),
+              buildColumn('Completed', completedCards),
             ],
           ),
         ],
