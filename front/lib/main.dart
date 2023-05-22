@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
@@ -329,6 +330,48 @@ class _NewCardDialogState extends State<NewCardDialog> {
     }
   }
 
+  Future<int> checkTotalDurationOnDate(String date) async {
+    try {
+      var url = Uri.http('localhost:3030', 'api/card/check/$date');
+      var response = await http.get(
+        url,
+      );
+
+      if (response.statusCode == 200) {
+        return response.body as int;
+      } else {
+        // Handle error response
+        print('Request failed with status: ${response.statusCode}.');
+        return 0;
+      }
+    } catch (error) {
+      // Handle network or JSON parsing errors
+      print('Error: $error');
+      return 0;
+    }
+  }
+
+  void showAlertMaxTime() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: const Text(
+              'Be careful, you are putting more than 8 hours of work on this date'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Ok'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -358,6 +401,16 @@ class _NewCardDialogState extends State<NewCardDialog> {
               child: IgnorePointer(
                 child: TextField(
                   controller: dateController,
+                  onChanged: (value) async {
+                    if (durationController.text.isEmpty) return;
+
+                    var date = value.toString();
+                    var total = await checkTotalDurationOnDate(date);
+                    var time = int.tryParse(durationController.text) ?? 0;
+                    if (total + time > 8) {
+                      showAlertMaxTime();
+                    }
+                  },
                   decoration: const InputDecoration(labelText: 'Date'),
                 ),
               ),
@@ -409,10 +462,20 @@ class _NewCardDialogState extends State<NewCardDialog> {
               ],
             ),
             TextField(
-              controller: durationController,
-              decoration: const InputDecoration(labelText: 'Duration'),
-              keyboardType: TextInputType.number,
-            ),
+                controller: durationController,
+                decoration: const InputDecoration(labelText: 'Duration'),
+                keyboardType: TextInputType.number,
+                onChanged: (value) async {
+                  var date = DateFormat('yyyy-MM-dd').format(selectedDate);
+                  var total = await checkTotalDurationOnDate(date);
+                  var time = int.tryParse(value) ?? 0;
+                  if (total + time > 8) {
+                    showAlertMaxTime();
+                  }
+                },
+                inputFormatters: <TextInputFormatter>[
+                  FilteringTextInputFormatter.digitsOnly
+                ]),
           ],
         ),
       ),

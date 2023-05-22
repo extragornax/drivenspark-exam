@@ -86,13 +86,7 @@ pub async fn check_total_duration_on_date(
     _db_manager: DBAccessManager,
 ) -> std::result::Result<impl warp::Reply, warp::Rejection> {
     match _db_manager.check_total_duration_on_date(_date) {
-        Ok(_total) => respond(
-            Ok(ReplyTotal {
-                total: _total,
-                date: _date,
-            }),
-            warp::http::StatusCode::OK,
-        ),
+        Ok(_total) => respond(Ok(_total), warp::http::StatusCode::OK),
         Err(_) => respond(
             Err(AppError::new("Not found", ErrorType::NotFound)),
             warp::http::StatusCode::NOT_FOUND,
