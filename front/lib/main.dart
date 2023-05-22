@@ -119,28 +119,15 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  // Future<void> createCard(data) async {
-  //   try {
-  //     var url = Uri.http('localhost:3030', 'api/card');
-  //     var response = await http.post(url, body: data);
-  //     if (response.statusCode == 200) {
-  //       print('Card created');
-  //     } else {
-  //       // Handle error response
-  //       print('Request failed with status: ${response.statusCode}.');
-  //     }
-  //   } catch (error) {
-  //     // Handle network or JSON parsing errors
-  //     print('Error: $error');
-  //   }
-  // }
-
   Future<void> deleteCard(id) async {
     try {
       var url = Uri.http('localhost:3030', 'api/card/$id');
       var response = await http.delete(url);
       if (response.statusCode == 200) {
         print('Card deleted');
+        setState(() {
+          cards = cards.where((card) => card.id != id).toList();
+        });
       } else {
         // Handle error response
         print('Request failed with status: ${response.statusCode}.');
@@ -224,7 +211,7 @@ class _MyHomePageState extends State<MyHomePage> {
         var response =
             await http.post(url, headers: headers, body: newCard.toString());
 
-        if (response.statusCode == 200) {
+        if (response.statusCode == 201) {
           // Card created successfully, update the UI
           setState(() {
             cards.add(newCard);
@@ -251,7 +238,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Trello Clone Gaspard W'),
+        title: const Text('Trello Clone Gaspard W'),
       ),
       body: Table(
         children: [
@@ -266,7 +253,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: createCard,
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -312,6 +299,10 @@ class _NewCardDialogState extends State<NewCardDialog> {
   TextEditingController priorityController = TextEditingController();
   TextEditingController durationController = TextEditingController();
 
+  String selectedStatus = 'todo';
+  String selectedPriority = 'high';
+  DateTime selectedDate = DateTime.now();
+
   @override
   void dispose() {
     titleController.dispose();
@@ -322,33 +313,105 @@ class _NewCardDialogState extends State<NewCardDialog> {
     super.dispose();
   }
 
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+
+    if (picked != null && picked != selectedDate) {
+      setState(() {
+        selectedDate = picked;
+        dateController.text = DateFormat('yyyy-MM-dd').format(selectedDate);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Create New Card'),
+      title: const Text('New Card'),
       content: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
               controller: titleController,
-              decoration: const InputDecoration(labelText: 'Title'),
+              decoration: InputDecoration(
+                labelText: 'Title',
+                counterText: '${titleController.text.length}/50',
+              ),
+              maxLength: 50,
             ),
             TextField(
               controller: descriptionController,
-              decoration: const InputDecoration(labelText: 'Description'),
+              decoration: InputDecoration(
+                labelText: 'Description',
+                counterText: '${descriptionController.text.length}/200',
+              ),
+              maxLength: 200,
             ),
-            TextField(
-              controller: dateController,
-              decoration: const InputDecoration(labelText: 'Date'),
+            InkWell(
+              onTap: () => _selectDate(context),
+              child: IgnorePointer(
+                child: TextField(
+                  controller: dateController,
+                  decoration: const InputDecoration(labelText: 'Date'),
+                ),
+              ),
             ),
-            TextField(
-              controller: priorityController,
+            DropdownButtonFormField<String>(
+              value: selectedStatus,
+              onChanged: (newValue) {
+                setState(() {
+                  selectedStatus = newValue!;
+                });
+              },
+              decoration: const InputDecoration(labelText: 'Status'),
+              items: const [
+                DropdownMenuItem<String>(
+                  value: 'todo',
+                  child: Text('To-do'),
+                ),
+                DropdownMenuItem<String>(
+                  value: 'inprogress',
+                  child: Text('In Progress'),
+                ),
+                DropdownMenuItem<String>(
+                  value: 'completed',
+                  child: Text('Completed'),
+                ),
+              ],
+            ),
+            DropdownButtonFormField<String>(
+              value: selectedPriority,
+              onChanged: (newValue) {
+                setState(() {
+                  selectedPriority = newValue!;
+                });
+              },
               decoration: const InputDecoration(labelText: 'Priority'),
+              items: const [
+                DropdownMenuItem<String>(
+                  value: 'high',
+                  child: Text('High'),
+                ),
+                DropdownMenuItem<String>(
+                  value: 'medium',
+                  child: Text('Medium'),
+                ),
+                DropdownMenuItem<String>(
+                  value: 'low',
+                  child: Text('Low'),
+                ),
+              ],
             ),
             TextField(
               controller: durationController,
               decoration: const InputDecoration(labelText: 'Duration'),
+              keyboardType: TextInputType.number,
             ),
           ],
         ),
@@ -368,10 +431,10 @@ class _NewCardDialogState extends State<NewCardDialog> {
               id: DateTime.now().millisecondsSinceEpoch,
               title: titleController.text,
               description: descriptionController.text,
-              date: dateController.text,
-              priority: priorityController.text,
+              date: DateFormat('yyyy-MM-dd').format(selectedDate),
+              priority: selectedPriority,
               duration: int.tryParse(durationController.text) ?? 0,
-              status: 'To-do',
+              status: selectedStatus,
             );
             Navigator.of(context).pop(newCard);
           },
