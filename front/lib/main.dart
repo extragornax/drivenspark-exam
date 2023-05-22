@@ -119,21 +119,21 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Future<void> createCard(data) async {
-    try {
-      var url = Uri.http('localhost:3030', 'api/card');
-      var response = await http.post(url, body: data);
-      if (response.statusCode == 200) {
-        print('Card created');
-      } else {
-        // Handle error response
-        print('Request failed with status: ${response.statusCode}.');
-      }
-    } catch (error) {
-      // Handle network or JSON parsing errors
-      print('Error: $error');
-    }
-  }
+  // Future<void> createCard(data) async {
+  //   try {
+  //     var url = Uri.http('localhost:3030', 'api/card');
+  //     var response = await http.post(url, body: data);
+  //     if (response.statusCode == 200) {
+  //       print('Card created');
+  //     } else {
+  //       // Handle error response
+  //       print('Request failed with status: ${response.statusCode}.');
+  //     }
+  //   } catch (error) {
+  //     // Handle network or JSON parsing errors
+  //     print('Error: $error');
+  //   }
+  // }
 
   Future<void> deleteCard(id) async {
     try {
@@ -207,6 +207,39 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  Future<void> createCard() async {
+    // Show dialog to get input for new card
+    CardItem? newCard = await showDialog<CardItem>(
+      context: context,
+      builder: (BuildContext context) {
+        return NewCardDialog();
+      },
+    );
+
+    // Create the new card if not null
+    if (newCard != null) {
+      try {
+        var url = Uri.http('localhost:3030', 'api/card');
+        var headers = {'Content-Type': 'application/json'};
+        var response =
+            await http.post(url, headers: headers, body: newCard.toString());
+
+        if (response.statusCode == 200) {
+          // Card created successfully, update the UI
+          setState(() {
+            cards.add(newCard);
+          });
+        } else {
+          // Handle error response
+          print('Request failed with status: ${response.statusCode}.');
+        }
+      } catch (error) {
+        // Handle network or JSON parsing errors
+        print('Error: $error');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     List<CardItem> todoCards =
@@ -230,6 +263,10 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: createCard,
+        child: Icon(Icons.add),
       ),
     );
   }
@@ -259,6 +296,88 @@ class _MyHomePageState extends State<MyHomePage> {
           Text('Status: ${card.status}'),
         ],
       ),
+    );
+  }
+}
+
+class NewCardDialog extends StatefulWidget {
+  @override
+  _NewCardDialogState createState() => _NewCardDialogState();
+}
+
+class _NewCardDialogState extends State<NewCardDialog> {
+  TextEditingController titleController = TextEditingController();
+  TextEditingController descriptionController = TextEditingController();
+  TextEditingController dateController = TextEditingController();
+  TextEditingController priorityController = TextEditingController();
+  TextEditingController durationController = TextEditingController();
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    descriptionController.dispose();
+    dateController.dispose();
+    priorityController.dispose();
+    durationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Create New Card'),
+      content: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(labelText: 'Title'),
+            ),
+            TextField(
+              controller: descriptionController,
+              decoration: const InputDecoration(labelText: 'Description'),
+            ),
+            TextField(
+              controller: dateController,
+              decoration: const InputDecoration(labelText: 'Date'),
+            ),
+            TextField(
+              controller: priorityController,
+              decoration: const InputDecoration(labelText: 'Priority'),
+            ),
+            TextField(
+              controller: durationController,
+              decoration: const InputDecoration(labelText: 'Duration'),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            // Close the dialog and return null
+            Navigator.of(context).pop();
+          },
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            // Create a new CardItem and return it
+            CardItem newCard = CardItem(
+              id: DateTime.now().millisecondsSinceEpoch,
+              title: titleController.text,
+              description: descriptionController.text,
+              date: dateController.text,
+              priority: priorityController.text,
+              duration: int.tryParse(durationController.text) ?? 0,
+              status: 'To-do',
+            );
+            Navigator.of(context).pop(newCard);
+          },
+          child: const Text('Create'),
+        ),
+      ],
     );
   }
 }
