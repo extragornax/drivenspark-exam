@@ -3,13 +3,12 @@ extern crate openssl;
 #[macro_use]
 extern crate diesel;
 
-use std::{env, net::IpAddr};
-use warp::Filter;
-
 use crate::{
     database::{get_pg_pool, PgPool},
     filters::api_filters,
 };
+use std::{env, net::IpAddr};
+use warp::Filter;
 
 mod card;
 mod database;
@@ -24,7 +23,9 @@ pub struct ConfigMapReponse {
     pub database_url: String,
 }
 
-/// App config getter
+/// Retrieves the application configuration.
+/// Swagger config:
+///   - N/A (helper function)
 pub fn get_app_config() -> ConfigMapReponse {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL env not set");
 
@@ -45,7 +46,9 @@ pub fn get_app_config() -> ConfigMapReponse {
     }
 }
 
-/// Main function, run and serves the routes
+/// Main function that runs and serves the routes.
+/// Swagger config:
+///   - N/A (entry point)
 #[tokio::main]
 async fn main() {
     if env::var_os("RUST_LOG").is_none() {

@@ -23,6 +23,13 @@ pub fn respond<T: Serialize>(
     }
 }
 
+/// Create a new card.
+/// Swagger config:
+///   - Operation ID: create_card
+///   - HTTP Method: POST
+///   - Path: /cards
+///   - Request Body: CardData
+///   - Response: JSON representation of the created card
 pub async fn create_card(
     _db_manager: DBAccessManager,
     _new_data: CardData,
@@ -36,6 +43,14 @@ pub async fn create_card(
     }
 }
 
+/// Edit an existing card.
+/// Swagger config:
+///   - Operation ID: edit_card
+///   - HTTP Method: PUT
+///   - Path: /cards/{id}
+///   - Path Parameter: id (integer)
+///   - Request Body: CardData
+///   - Response: JSON representation of the edited card
 pub async fn edit_card(
     _id: i64,
     _db_manager: DBAccessManager,
@@ -50,6 +65,12 @@ pub async fn edit_card(
     }
 }
 
+/// Get all cards.
+/// Swagger config:
+///   - Operation ID: get_all_cards
+///   - HTTP Method: GET
+///   - Path: /cards
+///   - Response: JSON representation of all cards
 pub async fn get_all_cards(
     _db_manager: DBAccessManager,
 ) -> std::result::Result<impl warp::Reply, warp::Rejection> {
@@ -62,6 +83,13 @@ pub async fn get_all_cards(
     }
 }
 
+/// Get a card by ID.
+/// Swagger config:
+///   - Operation ID: get_card_by_id
+///   - HTTP Method: GET
+///   - Path: /cards/{id}
+///   - Path Parameter: id (integer)
+///   - Response: JSON representation of the card with the specified ID
 pub async fn get_card_by_id(
     _id: i64,
     _db_manager: DBAccessManager,
@@ -81,6 +109,13 @@ struct ReplyTotal {
     date: NaiveDate,
 }
 
+/// Check the total duration on a specific date.
+/// Swagger config:
+///   - Operation ID: check_total_duration_on_date
+///   - HTTP Method: GET
+///   - Path: /cards/total_duration
+///   - Query Parameter: date (string in "YYYY-MM-DD" format)
+///   - Response: JSON representation of the total duration on the specified date
 pub async fn check_total_duration_on_date(
     _date: NaiveDate,
     _db_manager: DBAccessManager,
@@ -94,6 +129,13 @@ pub async fn check_total_duration_on_date(
     }
 }
 
+/// Delete a card by ID.
+/// Swagger config:
+///   - Operation ID: delete_card
+///   - HTTP Method: DELETE
+///   - Path: /cards/{id}
+///   - Path Parameter: id (integer)
+///   - Response: JSON representation of the deleted card
 pub async fn delete_card(
     _id: i64,
     _db_manager: DBAccessManager,

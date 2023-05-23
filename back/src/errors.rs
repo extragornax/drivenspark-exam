@@ -32,6 +32,8 @@ impl warp::reject::Reject for Error {}
 
 /// Handle route rejections
 /// Based on status code
+/// Swagger config:
+///   - N/A (helper function)
 pub async fn handle_rejection(err: Rejection) -> std::result::Result<impl Reply, Infallible> {
     let (code, message) = if err.is_not_found() {
         (StatusCode::NOT_FOUND, "Not Found".to_string())
@@ -120,8 +122,11 @@ pub struct AppError {
     pub err_type: ErrorType,
     pub message: String,
 }
+
 impl AppError {
     /// Create new AppError
+    /// Swagger config:
+    ///   - N/A (constructor)
     pub fn new(message: &str, err_type: ErrorType) -> AppError {
         AppError {
             message: message.to_string(),
@@ -130,6 +135,8 @@ impl AppError {
     }
 
     /// Convert diesel error to app error
+    /// Swagger config:
+    ///   - N/A (helper function)
     pub fn from_diesel_err(err: diesel::result::Error, context: &str) -> AppError {
         AppError::new(
             format!("{}: {}", context, err.to_string()).as_str(),
@@ -144,6 +151,9 @@ impl AppError {
         )
     }
 
+    /// Convert AppError to HTTP status code
+    /// Swagger config:
+    ///   - N/A (helper function)
     pub fn to_status_code(&self) -> warp::http::StatusCode {
         match &self.err_type {
             ErrorType::BadRequest => warp::http::StatusCode::BAD_REQUEST,

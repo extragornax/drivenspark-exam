@@ -7,11 +7,18 @@ use crate::{
     domain::CardData,
 };
 
+/// Filter for extracting the JSON body from the request.
+/// Swagger config:
+///   - N/A (helper function)
 pub fn with_json_body<T: DeserializeOwned + Send>(
 ) -> impl Filter<Extract = (T,), Error = warp::Rejection> + Clone {
     warp::body::content_length_limit(1024 * 16).and(warp::body::json())
 }
 
+/// Route for creating a card.
+/// Swagger config:
+///   - Path: "/card"
+///   - Method: POST
 pub fn route_create_card(
     pool: PgPool,
 ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
@@ -22,6 +29,10 @@ pub fn route_create_card(
         .and_then(super::card::create_card)
 }
 
+/// Route for editing a card.
+/// Swagger config:
+///   - Path: "/card/{id}"
+///   - Method: PUT
 pub fn route_edit_card(
     pool: PgPool,
 ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
@@ -32,6 +43,10 @@ pub fn route_edit_card(
         .and_then(super::card::edit_card)
 }
 
+/// Route for deleting a card.
+/// Swagger config:
+///   - Path: "/card/{id}"
+///   - Method: DELETE
 pub fn route_delete_card(
     pool: PgPool,
 ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
@@ -41,6 +56,10 @@ pub fn route_delete_card(
         .and_then(super::card::delete_card)
 }
 
+/// Route for getting a card by ID.
+/// Swagger config:
+///   - Path: "/card/{id}"
+///   - Method: GET
 pub fn route_get_card_by_id(
     pool: PgPool,
 ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
@@ -50,6 +69,10 @@ pub fn route_get_card_by_id(
         .and_then(super::card::get_card_by_id)
 }
 
+/// Route for checking total duration on a specific date.
+/// Swagger config:
+///   - Path: "/card/check/{date}"
+///   - Method: GET
 pub fn check_total_duration_on_date(
     pool: PgPool,
 ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
@@ -59,6 +82,10 @@ pub fn check_total_duration_on_date(
         .and_then(super::card::check_total_duration_on_date)
 }
 
+/// Route for getting all cards.
+/// Swagger config:
+///   - Path: "/card"
+///   - Method: GET
 pub fn route_get_all_cards(
     pool: PgPool,
 ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
@@ -68,7 +95,13 @@ pub fn route_get_all_cards(
         .and_then(super::card::get_all_cards)
 }
 
-// Aggregates Warp Filters
+/// Aggregates Warp Filters for the API routes.
+/// Swagger config:
+///   - Path: "/api"
+///   - Sub-paths:
+///     - "/card" (POST, PUT, DELETE, GET)
+///     - "/card/{id}" (GET)
+///     - "/card/check/{date}" (GET)
 pub fn api_filters(
     pool: PgPool,
 ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
