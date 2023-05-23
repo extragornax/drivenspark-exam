@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class CardItem {
@@ -44,6 +44,8 @@ class CardItem {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -57,6 +59,8 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key});
+
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
@@ -140,7 +144,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget buildColumn(String columnTitle, List<CardItem> columnCards) {
-    return TableCell(
+    return Container(
       child: Column(
         children: [
           Text(
@@ -164,7 +168,7 @@ class _MyHomePageState extends State<MyHomePage> {
               return Container(
                 height: 200,
                 width: double.infinity,
-                color: Colors.grey.shade200,
+                color: Colors.white,
               );
             },
             onAccept: (CardItem data) {
@@ -183,9 +187,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
                 updateCardData(data.id, data);
 
-                print("columnTitle: $columnTitle, data.status: ${data.status}");
-
-                // Add the card to the new column
                 cards.add(data);
               });
             },
@@ -260,29 +261,129 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   BoxDecoration myBoxDecoration() {
-    return BoxDecoration(border: Border.all(), color: Colors.blueAccent);
+    return BoxDecoration(
+      border: Border.all(color: const Color.fromARGB(255, 89, 0, 255)),
+      color: Colors.grey.shade200,
+    );
   }
 
   Widget buildCardWidget(CardItem card) {
-    // final formattedDate =
-    //     DateFormat('dd-MM-yyyy').format(DateTime.parse(card.date));
-
     final formattedDate = DateFormat().format(DateTime.parse(card.date));
 
-    return Container(
-      padding: const EdgeInsets.all(10),
-      // color: Colors.grey,
-      decoration: myBoxDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Title: ${card.title}'),
-          Text('Description: ${card.description}'),
-          Text('Date: $formattedDate'),
-          Text('Priority: ${card.priority}'),
-          Text('Duration: ${card.duration.toString()}'),
-          Text('Status: ${card.status}'),
-        ],
+    Color statusColor;
+    switch (card.status) {
+      case 'todo':
+        statusColor = Colors.yellow;
+        break;
+      case 'inprogress':
+        statusColor = Colors.blue;
+        break;
+      case 'completed':
+        statusColor = Colors.green;
+        break;
+      default:
+        statusColor = Colors.grey;
+        break;
+    }
+
+    TextStyle priorityStyle;
+    switch (card.priority) {
+      case 'low':
+        priorityStyle =
+            const TextStyle(color: Colors.green, fontWeight: FontWeight.bold);
+        break;
+      case 'medium':
+        priorityStyle =
+            const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold);
+        break;
+      case 'high':
+        priorityStyle =
+            const TextStyle(color: Colors.red, fontWeight: FontWeight.bold);
+        break;
+      default:
+        priorityStyle = const TextStyle(fontWeight: FontWeight.bold);
+        break;
+    }
+
+    return Material(
+      child: Container(
+        decoration: myBoxDecoration(),
+        width: 400,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Text(
+                  'Title:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  ' ${card.title}',
+                )
+              ],
+            ),
+            Row(
+              children: [
+                const Text(
+                  'Description:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  ' ${card.description.length <= 40 ? card.description : "${card.description.substring(0, 40)}..."}',
+                )
+              ],
+            ),
+            Row(
+              children: [
+                const Text(
+                  'Date:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  ' ${formattedDate}',
+                )
+              ],
+            ),
+            Row(
+              children: [
+                const Text(
+                  'Priority:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  ' ${card.priority}',
+                  style: priorityStyle,
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                const Text(
+                  'Duration:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  ' ${card.duration.toString()}',
+                )
+              ],
+            ),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: statusColor,
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: Text(
+                'Status: ${card.status}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
